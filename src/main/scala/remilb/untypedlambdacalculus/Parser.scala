@@ -7,7 +7,7 @@ import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
   * LambdaExpressions. Grammar implemented more or less as per Pierce 5-3, with addition of parentheses for
   * disambiguation. Application is left associative.
   */
-class UntypedLambdaCalculusParser extends RegexParsers with PackratParsers {
+class Parser extends RegexParsers with PackratParsers {
   // Lexer rules
   lazy val abstractionBegin: PackratParser[String] =
     """\\""".r ^^ {
@@ -20,25 +20,24 @@ class UntypedLambdaCalculusParser extends RegexParsers with PackratParsers {
     }
 
   // Parser rules
-  lazy val variable: PackratParser[Var] = """[a-z]""".r ^^ { x =>
+  lazy val expr
+    : PackratParser[LambdaExpression] = application | abstraction | variable | parensExpr
+
+  lazy val parensExpr: PackratParser[LambdaExpression] = "(" ~> expr <~ ")"
+
+  lazy val variable: PackratParser[Var] = """[a-zA-Z]""".r ^^ { x =>
     Var(x.charAt(0))
   }
 
+  // TODO: Would be nice to make this type PackratParser[Abstraction]
   lazy val abstraction
-    : PackratParser[Abstraction] = abstractionBegin ~> variable ~ (abstractionBodyBegin ~> term) ^^ {
-    case boundVar ~ body => Abstraction(boundVar, body)
+    : PackratParser[LambdaExpression] = abstractionBegin ~> variable.* ~ (abstractionBodyBegin ~> expr) ^^ {
+    case boundVars ~ body =>
+      boundVars.foldRight(body)(Abstraction(_, _))
   }
 
   lazy val application
-    : PackratParser[Application] = term ~ (parensTerm | abstraction | variable) ^^ {
+    : PackratParser[Application] = expr ~ (parensExpr | abstraction | variable) ^^ {
     case term1 ~ term2 => Application(term1, term2)
   }
-
-  lazy val parensTerm: PackratParser[LambdaExpression] = "(" ~> term <~ ")" ^^ {
-    term =>
-      term
-  }
-
-  lazy val term
-    : PackratParser[LambdaExpression] = application | abstraction | variable | parensTerm
 }

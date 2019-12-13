@@ -3,17 +3,16 @@ package remilb.untypedlambdacalculus
 import org.scalatest.fixture.FunSuite
 import org.scalatest.{Matchers, Outcome}
 
-class UntypedLambdaCalculusParserTest extends FunSuite with Matchers {
-  override type FixtureParam = UntypedLambdaCalculusParser
+class ParserTest extends FunSuite with Matchers {
+  override type FixtureParam = Parser
 
   def withFixture(test: OneArgTest): Outcome = {
-    val parser = new UntypedLambdaCalculusParser
+    val parser = new Parser
     withFixture(test.toNoArgTest(parser))
   }
 
-  def getParseResult(parser: UntypedLambdaCalculusParser,
-                     input: String): LambdaExpression = {
-    parser.parseAll(parser.term, input) match {
+  def getParseResult(parser: Parser, input: String): LambdaExpression = {
+    parser.parseAll(parser.expr, input) match {
       case parser.Success(result, _) => result
       case parser.Failure(msg, remainingInput) =>
         fail(

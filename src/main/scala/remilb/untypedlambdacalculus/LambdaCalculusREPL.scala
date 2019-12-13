@@ -2,15 +2,17 @@ package remilb.untypedlambdacalculus
 
 import scala.io.StdIn.readLine
 
-object LambdaCalculusREPL {
-  def main(args: Array[String]): Unit = {
-    val parser = new UntypedLambdaCalculusParser
+class LambdaCalculusREPL(parser: Parser) {
+  // Greek lambda for prompt
+  val prompt = "\u03BB> "
+
+  def run(): Unit = {
     var input = ""
     println("Enter lambda expression to evaluate or enter :q to quit")
     do {
-      print(s"${0x03BB.toChar}> ")
+      print(prompt)
       input = readLine()
-      val parseResult = parser.parseAll(parser.term, input)
+      val parseResult = parser.parseAll(parser.expr, input)
       parseResult match {
         //case parseResult.msg == "'(' expected but ':' found" => println("Bye!")
         case parser.Success(result, _) =>
@@ -20,5 +22,12 @@ object LambdaCalculusREPL {
         case parser.NoSuccess(_, _) => println("Not a valid lambda term!")
       }
     } while (input != ":q")
+  }
+}
+
+object LambdaCalculusREPL {
+  def main(args: Array[String]): Unit = {
+    val repl = new LambdaCalculusREPL(new Parser)
+    repl.run()
   }
 }
